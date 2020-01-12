@@ -1,10 +1,11 @@
-Configuration DscPrerequisite{
+Configuration DscInit{
     Param(
         [Parameter(Mandatory)]        
         [PSCredential]$PSDscRunAsCred = (Get-Credential -Message 'Enter DscRunAs User Details')
     )
-       
+
     Import-DscResource -ModuleName PSDesiredStateConfiguration
+
     Node localhost{
         File CreateTempFolder{            
             DestinationPath = 'C:\temp'
@@ -46,3 +47,22 @@ Configuration DscPrerequisite{
         } 
     }
 }
+
+[DSCLocalConfigurationManager()]
+Configuration LCMConfig{
+    Node localhost{
+        Settings{
+            ActionAfterReboot  = 'ContinueConfiguration'
+            ConfigurationMode  = 'ApplyAndMonitor'
+            RefreshMode        = 'Push'
+            RebootNodeIfNeeded = $true
+        }
+    }
+}
+
+
+LCMConfig C:\Temp
+Set-DscLocalConfigurationManager -Path C:\Temp
+
+DscInit C:\Temp
+Start-DscConfiguration -Path C:\Temp -Wait -Force
